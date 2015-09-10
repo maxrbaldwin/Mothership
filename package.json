@@ -1,0 +1,24 @@
+{
+  "name": "mothership",
+  "version": "0.0.1",
+  "description": "Node command line client that deploys new versions of apps using git web hooks",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "keywords": [
+    "mothership",
+    "mothership-cli",
+    "pm2",
+    "digital",
+    "ocean"
+  ],
+  "author": "Max Baldwin",
+  "license": "MIT",
+  "dependencies": {
+    "bluebird": "^2.10.0",
+    "chalk": "^1.1.1",
+    "express": "^4.13.3",
+    "pm2": "^0.14.7"
+  }
+}

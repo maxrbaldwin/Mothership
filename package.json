@@ -20,6 +20,7 @@
   "author": "Max Baldwin",
   "license": "MIT",
   "dependencies": {
+    "async": "^1.4.2",
     "bluebird": "^2.10.0",
     "chalk": "^1.1.1",
     "dotenv": "^1.2.0",

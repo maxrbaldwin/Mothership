@@ -1,9 +1,12 @@
-var start = require('launch');
-var secret = require('secret');
+var launch = require('./launch');
+var secret = require('./secret');
 
 var commands = {
   launch: launch,
-  secret: secret
+  secret: secret,
+  help: function() {
+    console.log('help!');
+  }
 };
 
-modules.exports = commands;
+module.exports = commands;

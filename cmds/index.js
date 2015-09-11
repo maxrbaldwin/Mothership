@@ -1,9 +1,9 @@
-var start = require('start');
+var start = require('launch');
 var secret = require('secret');
 
-var commandTree = {
-  start: start,
+var commands = {
+  launch: launch,
   secret: secret
 };
 
-modules.exports = commandTree;
+modules.exports = commands;

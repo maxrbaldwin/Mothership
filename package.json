@@ -1,6 +1,6 @@
 {
   "name": "mothership",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Node command line client that deploys new versions of apps using git web hooks",
   "main": "index.js",
   "bin": {

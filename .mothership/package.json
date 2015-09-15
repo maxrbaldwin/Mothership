@@ -1,0 +1,16 @@
+{
+  "name": "mothership-mainframe",
+  "version": "0.0.1",
+  "description": "Local storage for the mothership app",
+  "main": "index.js",
+  "scripts": {
+    "test": "node index.js"
+  },
+  "keywords": [
+    "mothership",
+    "digital",
+    "ocean"
+  ],
+  "author": "Max Baldwin",
+  "license": "ISC"
+}

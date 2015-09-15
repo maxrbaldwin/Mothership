@@ -1,11 +1,10 @@
 // @TODO: Move promises into a "promise" directory.
-// @TODO: Remove modules directory and unistall mothership-promises
-// @TODO: Use PM2 to find out if mothership was already launched
 
 var chalk = require('chalk');
 var Promise = require('bluebird');
 var path = require('path');
 var fs = require('fs');
+var mainframe = require('mothership-mainframe');
 
 var PM2 = Promise.promisifyAll(require('pm2'));
 var Prompt = Promise.promisifyAll(require('prompt'));
@@ -40,15 +39,25 @@ var start = function() {
         process.env.MothershipClassified = answer.secret;
       }
 
-      return PM2.startAsync({
-        script: path.join(__dirname, '../../server'),
-        name: 'Mothership',
-        port: 2328,
-        watch: true
-      });
+      if(mainframe.deployments.get('mothership')) {
+        return Promise.resolve();
+      } else {
+        return PM2.startAsync({
+          script: path.join(__dirname, '../../server'),
+          name: 'Mothership',
+          port: 2328,
+          watch: true
+        });
+      }
     })
-    .then(function(){
-      console.log(chalk.green('Deployment Successful! Mothership launched on port ' + chalk.cyan(2328) + '!'));
+    .then(function(apps){
+      if(apps) {
+        console.log(chalk.green('Deployment Successful! Mothership launched on port ' + chalk.cyan(2328) + '!'));
+
+        mainframe.deployments.set('mothership', true);
+      } else {
+        console.log(chalk.yellow('Mothership already deployed on port ' + chalk.cyan(2328) + '!'));
+      }
       process.exit(0);
     })
     .catch(function(err){

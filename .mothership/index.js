@@ -1,9 +1,6 @@
-var deployments = require('./deployments');
-var profile = require('./profile');
-
-var access = {
-  profile: profile,
-  deployments: deployments
+var dbs = {
+  profile: require('./dbs/profile'),
+  deployments: require('./dbs/deployments')
 };
 
-module.exports = access;
+module.exports = dbs;

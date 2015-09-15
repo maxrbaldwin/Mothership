@@ -1,6 +1,6 @@
 {
   "name": "mothership-mainframe",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Local storage for the mothership app",
   "main": "index.js",
   "scripts": {
@@ -12,5 +12,8 @@
     "ocean"
   ],
   "author": "Max Baldwin",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "nedb": "^1.2.0"
+  }
 }

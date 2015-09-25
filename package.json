@@ -1,6 +1,6 @@
 {
   "name": "mothership",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Node command line client that deploys new versions of apps using git web hooks",
   "main": "index.js",
   "bin": {
@@ -8,7 +8,7 @@
     "mts": "mothership.js"
   },
   "scripts": {
-    "test": "node index.js"
+    "start": "nodemon server/index.js"
   },
   "keywords": [
     "mothership",
@@ -22,12 +22,22 @@
   "dependencies": {
     "async": "^1.4.2",
     "bluebird": "^2.10.0",
+    "body-parser": "^1.13.3",
     "chalk": "^1.1.1",
+    "cookie-parser": "^1.3.5",
     "dotenv": "^1.2.0",
     "express": "^4.13.3",
-    "inquirer": "^0.9.0",
-    "mothership-promises": "./modules/mothership-promises",
+    "mothership-mainframe": "./.mothership",
     "nodegit": "^0.4.1",
-    "pm2": "^0.14.7"
+    "open": "0.0.5",
+    "pm2": "^0.14.7",
+    "prompt": "^0.2.14",
+    "swig": "^1.4.2"
+  },
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-contrib-sass": "^0.9.2",
+    "grunt-contrib-watch": "^0.6.1",
+    "load-grunt-config": "^0.17.2"
   }
 }

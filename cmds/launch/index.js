@@ -39,22 +39,17 @@ var start = function() {
         process.env.MothershipClassified = answer.secret;
       }
 
-      if(mainframe.deployments.get('mothership')) {
-        return Promise.resolve();
-      } else {
-        return PM2.startAsync({
-          script: path.join(__dirname, '../../server'),
-          name: 'Mothership',
-          port: 2328,
-          watch: true
-        });
-      }
+      // @TODO check if is launched
+      return PM2.startAsync({
+        script: path.join(__dirname, '../../server'),
+        name: 'Mothership',
+        port: 2328,
+        watch: true
+      });
     })
     .then(function(apps){
       if(apps) {
         console.log(chalk.green('Deployment Successful! Mothership launched on port ' + chalk.cyan(2328) + '!'));
-
-        mainframe.deployments.set('mothership', true);
       } else {
         console.log(chalk.yellow('Mothership already deployed on port ' + chalk.cyan(2328) + '!'));
       }

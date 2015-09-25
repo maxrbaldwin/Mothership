@@ -29,7 +29,6 @@
     "express": "^4.13.3",
     "mothership-mainframe": "./.mothership",
     "nodegit": "^0.4.1",
-    "npm": "^2.14.3",
     "open": "0.0.5",
     "pm2": "^0.14.7",
     "prompt": "^0.2.14",

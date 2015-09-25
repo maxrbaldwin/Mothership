@@ -1,95 +1,148 @@
 var Router = require('express').Router();
 var Promise = require('bluebird');
 var path = require('path');
-var pm2 = require('pm2');
 var Git = require('nodegit');
-var npm = require('npm');
 
 var FS = Promise.promisifyAll(require('fs'));
-var PM2 = Promise.promisifyAll(pm2);
-var NPM = Promise.promisifyAll(npm);
+var PM2 = Promise.promisifyAll(require('pm2'));
+
+var exec = Promise.promisifyAll(require('child_process'));
 
 var cache = require('./cache');
 
-Router.post('/', function(req, res){
+var getDependencies = function(dependencies) {
+  var deps = '';
+
+  Object.keys(dependencies).forEach(function(el) {
+    deps = deps + ' ' + el;
+  });
+
+  return deps;
+};
+
+Router.post('/', function(req, res) {
   var requestId = req.body.repository.pushed_at;
   var requestName = req.body.repository.name;
   var cloneURL = req.body.repository.clone_url;
 
-  cache[requestId] = {};
-
-  /* Save deployment record here. Use model method */
-
-  var localPath = path.join(__dirname, '/apps/' + requestName);
+  var baseDir = path.join(__dirname, '/ms-apps/');
+  var localPath = baseDir + requestName;
 
   var cloneOptions = {};
 
-  cloneOptions.remoteCallbacks = {
-      certificateCheck: function() { return 1; }
-  };
-
-  var cloneRepository = Git.Clone(cloneURL, localPath, cloneOptions);
-
   var errorAndAttemptOpen = function() {
-      return Git.Repository.open(localPath);
+    return Git.Repository.open(localPath);
   };
 
-  cloneRepository.catch(errorAndAttemptOpen)
-      .then(function(repository) {
-        return FS.readFileAsync(localPath + '/package.json');
-      })
-      .then(function(path){
-        cache[requestId].package = JSON.parse(path);
+  var certificateCheck = function() {
+    return 1;
+  };
 
-        if(cache[requestId].package.name && cache[requestId].package.version && cache[requestId].package.scripts.start) {
-            // save with deployment schema
-            // pm2.connect(function(){
-            //   console.log('connect');
-            //   return pm2.startAsync(startCommand, { title: name });
-            // });
+  var repository;
 
-            return NPM.loadAsync();
-        } else {
-          console.log('else');
+  cache[requestName] = {};
+
+  cloneOptions.remoteCallbacks = {
+    certificateCheck: certificateCheck
+  };
+
+  //@TODO: Save deployment record here. Use model method
+
+  // Connect to PM2
+  PM2.connectAsync()
+    .then(function(list) {
+      // List all running apps
+      //@TODO: Flag deployment started
+
+      return PM2.listAsync();
+    })
+    .then(function(list) {
+      var sameApp = [];
+
+      // Look through all deployed apps and return any app name with same localPath
+      list.forEach(function(el, i) {
+        if (list[i].name === requestName) {
+          sameApp.push(el);
         }
-      })
-      .then(function(rnpm){
-        if(cache[requestId].package && cache[requestId].package.dependencies) {
-          console.log('install');
-          console.log(rnpm);
-          rnpm.commands.install(Object.keys(cache[requestId].package.dependencies), function(){
-            console.log('installed');
-            console.log(pm2);
-            return PM2.connectAsync();
+      });
+
+      // If an app was found return an open
+      if (sameApp.length) {
+        //@TODO: Flag merge
+
+        return Git.Repository.open(localPath).then(function(repo) {
+            repository = repo;
+
+            return repository.fetchAll({
+              credentials: function(url, userName) {
+                return Git.Cred.sshKeyFromAgent(userName);
+              },
+              certificateCheck: function() {
+                return 1;
+              }
+            });
+          })
+          .then(function() {
+            return repository.mergeBranches("master", "origin/master");
+          })
+          .then(function() {
+            return PM2.restart(requestName);
+          })
+          .catch(function(err) {
+            console.log('Merge Err', err);
           });
-        }
-      })
-      .then(function(){
+      } else {
+        //@TODO: Flag clone
+
+        return Git.Clone(cloneURL, localPath, cloneOptions).then(function() {
+            return FS.readFileAsync(localPath + '/package.json');
+          })
+          .then(function(packageJson) {
+            var deps;
+            var pack = JSON.parse(packageJson);
+
+            if (pack && pack.dependencies) {
+              deps = getDependencies(pack.dependencies);
+              cache[requestName].package = pack;
+
+              console.log('install');
+              return exec.execAsync('npm install --prefix ' + localPath + deps);
+            }
+          })
+          .catch(function(err) {
+            console.log('clone err', err);
+          });
+      }
+    })
+    .then(function(repo) {
+      if (Array.isArray(repo)) {
         var port;
 
-        if(cache[requestId].ms && cache[requestId].ms.port) {
-          port = cache[requestId].ms.port;
+        if (cache[requestName].package.ms && cache[requestName].package.ms.options && cache[requestName].package.ms.options.port) {
+          port = cache[requestName].package.ms.options.port;
         } else {
-          // @TODO: Write functions in cache that find out the next port, add and delete.
+          //@TODO: Write functions in cache that find out the next port, add and delete.
           port = 8000;
         }
-        console.log(port);
-        return PM2.startAsync(cache[requestId].package.scripts.start, {
-           title: cache[requestId].package.name,
-           port: port
-         });
-      })
-      .then(function(apps){
-        console.log(apps);
-        return PM2.disconnectAsync();
-      })
-      .then(function(){
-        // @TODO: function to delete out of cache.
-        console.log('done');
-      })
-      .catch(function(err){
-        console.log(err);
-      });
+
+        //@TODO: Flage boot
+        return PM2.startAsync(localPath + '/' + cache[requestName].package.ms.start, {
+          name: requestName,
+          port: port
+        });
+      } else {
+        Promise.resolve();
+      }
+    })
+    .then(function(start){
+      //@TODO: Flag disconnect
+      //@TODO: Delete cache, send message, update db, emit socket
+      
+      return PM2.disconnectAsync();
+    })
+    .catch(function(err){
+      console.log(err);
+    });
 
   res.status(200).send('All Good');
 });

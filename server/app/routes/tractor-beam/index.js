@@ -1,8 +1,8 @@
 var Router = require('express').Router();
 var Promise = require('bluebird');
 var path = require('path');
-var Git = require('nodegit');
 
+var Git = Promise.promisifyAll(require('simple-git')());
 var FS = Promise.promisifyAll(require('fs'));
 var PM2 = Promise.promisifyAll(require('pm2'));
 
@@ -28,23 +28,7 @@ Router.post('/', function(req, res) {
   var baseDir = path.join(__dirname, '/ms-apps/');
   var localPath = baseDir + requestName;
 
-  var cloneOptions = {};
-
-  var errorAndAttemptOpen = function() {
-    return Git.Repository.open(localPath);
-  };
-
-  var certificateCheck = function() {
-    return 1;
-  };
-
-  var repository;
-
   cache[requestName] = {};
-
-  cloneOptions.remoteCallbacks = {
-    certificateCheck: certificateCheck
-  };
 
   //@TODO: Save deployment record here. Use model method
 
@@ -70,20 +54,9 @@ Router.post('/', function(req, res) {
       if (sameApp.length) {
         //@TODO: Flag merge
 
-        return Git.Repository.open(localPath).then(function(repo) {
-            repository = repo;
-
-            return repository.fetchAll({
-              credentials: function(url, userName) {
-                return Git.Cred.sshKeyFromAgent(userName);
-              },
-              certificateCheck: function() {
-                return 1;
-              }
-            });
-          })
-          .then(function() {
-            return repository.mergeBranches("master", "origin/master");
+        return Git.pullAsync('origin', 'master').then(function(repo) {
+            //@TODO: Save something here
+            return Promise.resolve();
           })
           .then(function() {
             return PM2.restart(requestName);
@@ -94,7 +67,7 @@ Router.post('/', function(req, res) {
       } else {
         //@TODO: Flag clone
 
-        return Git.Clone(cloneURL, localPath, cloneOptions).then(function() {
+        return Git.cloneAsync(cloneURL, localPath).then(function() {
             return FS.readFileAsync(localPath + '/package.json');
           })
           .then(function(packageJson) {
@@ -137,7 +110,6 @@ Router.post('/', function(req, res) {
     .then(function(start){
       //@TODO: Flag disconnect
       //@TODO: Delete cache, send message, update db, emit socket
-
       return PM2.disconnectAsync();
     })
     .catch(function(err){

@@ -27,11 +27,10 @@
     "cookie-parser": "^1.3.5",
     "dotenv": "^1.2.0",
     "express": "^4.13.3",
-    "mothership-mainframe": "./.mothership",
-    "nodegit": "^0.4.1",
     "open": "0.0.5",
     "pm2": "^0.14.7",
     "prompt": "^0.2.14",
+    "simple-git": "^1.10.0",
     "swig": "^1.4.2"
   },
   "devDependencies": {

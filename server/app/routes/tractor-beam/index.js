@@ -20,6 +20,11 @@ var getDependencies = function(dependencies) {
   return deps;
 };
 
+var nextPort = function() {
+  cache.next = parseInt(cache.next) + 1;
+  return cache.next;
+}
+
 Router.post('/', function(req, res) {
   var requestId = req.body.repository.pushed_at;
   var requestName = req.body.repository.name;
@@ -28,7 +33,7 @@ Router.post('/', function(req, res) {
   var baseDir = path.join(__dirname, '/ms-apps/');
   var localPath = baseDir + requestName;
 
-  cache[requestName] = {};
+  cache.deployments[requestName] = {};
 
   //@TODO: Save deployment record here. Use model method
 
@@ -76,7 +81,7 @@ Router.post('/', function(req, res) {
 
             if (pack && pack.dependencies) {
               deps = getDependencies(pack.dependencies);
-              cache[requestName].package = pack;
+              cache.deployments[requestName].package = pack;
 
               console.log('install');
               return exec.execAsync('npm install --prefix ' + localPath + deps);
@@ -91,15 +96,15 @@ Router.post('/', function(req, res) {
       if (Array.isArray(repo)) {
         var port;
 
-        if (cache[requestName].package.ms && cache[requestName].package.ms.options && cache[requestName].package.ms.options.port) {
-          port = cache[requestName].package.ms.options.port;
+        if (cache.deployments[requestName].package.ms && cache.deployments[requestName].package.ms.options && cache.deployments[requestName].package.ms.options.port) {
+          port = cache.deployments[requestName].package.ms.options.port;
         } else {
           //@TODO: Write functions in cache that find out the next port, add and delete.
-          port = 8000;
+          port = nextPort();
         }
 
         //@TODO: Flage boot
-        return PM2.startAsync(localPath + '/' + cache[requestName].package.ms.start, {
+        return PM2.startAsync(localPath + '/' + cache.deployments[requestName].package.ms.start, {
           name: requestName,
           port: port
         });
